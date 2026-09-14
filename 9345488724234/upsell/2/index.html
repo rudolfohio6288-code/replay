@@ -115,7 +115,7 @@
 
   </main>
 
-  <!-- MODAL CHECKOUT FASTSOFT PIX -->
+  <!-- MODAL CHECKOUT TECHBYNET PIX -->
   <div id="modal-pix" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
       
@@ -164,7 +164,7 @@
   </footer>
 
   <script>
-    const FASTSOFT_AUTH = "Basic " + btoa("x:sk_cbb3917adbe1bdbcecf3e1bd76c86db8f509e8e3");
+    const TECHBYNET_KEY = "8db67d23-46c8-42fa-8e58-8ce3005dcf22";
     let urlParams = new URLSearchParams(window.location.search);
     let rawCpf = urlParams.get('cpf') || localStorage.getItem('userCPF') || '';
     let cpf = rawCpf.replace(/\D/g, '') || "07580365316";
@@ -209,17 +209,18 @@
       };
 
       try {
-        let res = await fetch("https://api.fastsoftbrasil.com/api/user/transactions", {
+        let res = await fetch("https://api-gateway.techbynet.com/api/user/transactions", {
           method: "POST",
           headers: {
-            "Authorization": FASTSOFT_AUTH,
+            "x-api-key": TECHBYNET_KEY,
             "Content-Type": "application/json"
           },
           body: JSON.stringify(payload)
         });
         let data = await res.json();
-        if (data && data.data && data.data.pix && data.data.pix.qrcode) {
-          let code = data.data.pix.qrcode;
+        let qrcode = (data && data.data && data.data.pix && data.data.pix.qrcode) || (data && data.data && data.data.qrCode);
+        if (data && data.data && qrcode) {
+          let code = qrcode;
           transactionId = data.data.id;
 
           document.getElementById('pix-code').value = code;
@@ -235,7 +236,7 @@
 
           iniciarVerificacaoStatus(transactionId);
         } else {
-          console.error("FastSoft Error:", data);
+          console.error("TechbyNet Error:", data);
           alert("Nao foi possivel gerar a cobranca. Tente novamente.");
           document.getElementById('modal-pix').classList.add('hidden');
         }
@@ -264,9 +265,9 @@
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(async () => {
         try {
-          let res = await fetch("https://api.fastsoftbrasil.com/api/user/transactions/" + id, {
+          let res = await fetch("https://api-gateway.techbynet.com/api/user/transactions/" + id, {
             method: "GET",
-            headers: { "Authorization": FASTSOFT_AUTH }
+            headers: { "x-api-key": TECHBYNET_KEY }
           });
           let json = await res.json();
           if (json && json.data) {
