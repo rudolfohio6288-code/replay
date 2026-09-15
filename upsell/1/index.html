@@ -121,42 +121,36 @@
 
   </main>
 
-  <!-- MODAL CHECKOUT TECHBYNET PIX -->
+  <!-- MODAL CHECKOUT FIREBOT PIX -->
   <div id="modal-pix" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl relative">
       
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2">
-          <i class="fa-brands fa-pix text-emerald-600 text-2xl"></i>
-          <span class="font-bold text-slate-800 text-sm">Pagamento via PIX</span>
-        </div>
-        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Valor: R$ 43,92</span>
+      <div class="w-14 h-14 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600 text-2xl">
+        <i class="fa-brands fa-pix"></i>
       </div>
 
-      <!-- LOADING -->
-      <div id="pix-loading" class="py-8 space-y-3">
-        <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="text-sm font-semibold text-slate-600">Gerando cobran&ccedil;a PIX oficial...</p>
+      <h3 class="text-xl font-bold text-slate-900">Pague com PIX</h3>
+      <p class="text-xs text-slate-500">Escaneie o QR Code ou copie a chave para pagar no app do seu banco.</p>
+
+      <!-- SPINNER LOADING -->
+      <div id="pix-loading" class="py-12 flex flex-col items-center justify-center gap-3">
+        <div class="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-semibold text-slate-600">Gerando cobran&ccedil;a PIX segura...</p>
       </div>
 
-      <!-- QR CODE CONTAINER -->
+      <!-- CONTEUDO DO PIX GERADO -->
       <div id="pix-content" class="hidden space-y-4">
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl inline-block mx-auto shadow-inner">
-          <div id="qrcode-box" class="flex justify-center"></div>
+        <div id="qrcode-box" class="flex justify-center p-2 bg-slate-50 border border-slate-200 rounded-2xl w-[196px] h-[196px] mx-auto items-center"></div>
+
+        <div class="flex items-center gap-2">
+          <input id="pix-code" type="text" readonly class="w-full bg-slate-100 border border-slate-200 text-slate-700 text-xs px-3 py-2.5 rounded-xl font-mono truncate focus:outline-none" />
+          <button id="btn-copy" onclick="copiarPix()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-copy"></i> Copiar
+          </button>
         </div>
 
-        <div>
-          <p class="text-xs text-slate-500 mb-2">Copie o c&oacute;digo abaixo e pague em qualquer aplicativo banc&aacute;rio:</p>
-          <div class="flex gap-2">
-            <input type="text" id="pix-code" readonly class="w-full bg-slate-100 border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono select-all">
-            <button onclick="copiarPix()" id="btn-copy" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shrink-0 transition flex items-center gap-1">
-              <i class="fa-solid fa-copy"></i> Copiar
-            </button>
-          </div>
-        </div>
-
-        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center justify-center gap-2 font-semibold animate-pulse">
-          <i class="fa-solid fa-arrows-rotate animate-spin"></i>
+        <div class="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-600 animate-pulse pt-1">
+          <i class="fa-solid fa-arrows-rotate fa-spin"></i>
           <span>Aguardando confirma&ccedil;&atilde;o de pagamento...</span>
         </div>
       </div>
@@ -170,7 +164,7 @@
   </footer>
 
   <script>
-    const TECHBYNET_KEY = "8db67d23-46c8-42fa-8e58-8ce3005dcf22";
+    const FIREBOT_KEY = "fire_sk_live_f527b9f22237d5dedad3ef4a24c87919f904d4e4";
     let urlParams = new URLSearchParams(window.location.search);
     let rawCpf = urlParams.get('cpf') || localStorage.getItem('userCPF') || '';
     let cpf = rawCpf.replace(/\D/g, '') || "07580365316";
@@ -194,40 +188,34 @@
       document.getElementById('pix-content').classList.add('hidden');
 
       let payload = {
-        amount: 4392,
-        paymentMethod: "PIX",
+        amount: 43.92,
+        productType: "DIGITAL",
+        description: "Servicos e Taxas",
+        storeUrl: window.location.origin || "https://fabianoconsultor.click",
         customer: {
           name: nome || "Vendas da Silva",
           email: "cliente" + cpf.slice(0,6) + "@email.com",
-          document: {
-            number: cpf,
-            type: "CPF"
-          },
-          phone: "11999999999"
-        },
-        items: [{
-          title: "Servicos e Taxas",
-          unitPrice: 4392,
-          quantity: 1,
-          tangible: false
-        }],
-        pix: { expiresInDays: 1 }
+          cpf: cpf,
+          phone: "11999999999",
+          address: "Av. Paulista, 1000, Bela Vista, São Paulo - SP, CEP 01310-100"
+        }
       };
 
       try {
-        let res = await fetch("https://api-gateway.techbynet.com/api/user/transactions", {
+        let res = await fetch("https://firebotbr.com/api/v1/pix/create", {
           method: "POST",
           headers: {
-            "x-api-key": TECHBYNET_KEY,
+            "x-api-key": FIREBOT_KEY,
             "Content-Type": "application/json"
           },
           body: JSON.stringify(payload)
         });
         let data = await res.json();
-        let qrcode = (data && data.data && data.data.pix && data.data.pix.qrcode) || (data && data.data && data.data.qrCode);
-        if (data && data.data && qrcode) {
+        let qrcode = data && (data.pixCopiaECola || (data.data && (data.data.pixCopiaECola || (data.data.pix && data.data.pix.qrcode) || data.data.qrCode)));
+        let txId = data && (data.transactionId || (data.data && (data.data.transactionId || data.data.id)));
+        if (qrcode && txId) {
           let code = qrcode;
-          transactionId = data.data.id;
+          transactionId = txId;
 
           document.getElementById('pix-code').value = code;
           document.getElementById('qrcode-box').innerHTML = "";
@@ -242,7 +230,7 @@
 
           iniciarVerificacaoStatus(transactionId);
         } else {
-          console.error("TechbyNet Error:", data);
+          console.error("Firebot Error:", data);
           alert("Nao foi possivel gerar a cobranca. Tente novamente.");
           document.getElementById('modal-pix').classList.add('hidden');
         }
@@ -271,13 +259,13 @@
       if (pollInterval) clearInterval(pollInterval);
       pollInterval = setInterval(async () => {
         try {
-          let res = await fetch("https://api-gateway.techbynet.com/api/user/transactions/" + id, {
+          let res = await fetch("https://firebotbr.com/api/v1/pix/" + id, {
             method: "GET",
-            headers: { "x-api-key": TECHBYNET_KEY }
+            headers: { "x-api-key": FIREBOT_KEY, "accept": "application/json" }
           });
           let json = await res.json();
-          if (json && json.data) {
-            let st = String(json.data.status || "").toUpperCase();
+          if (json) {
+            let st = String(json.status || (json.data && json.data.status) || "").toUpperCase();
             if (st === "PAID" || st === "APPROVED" || st === "COMPLETED") {
               clearInterval(pollInterval);
               
